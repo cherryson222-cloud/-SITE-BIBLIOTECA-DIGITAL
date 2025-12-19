@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Livros</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=Playfair+Display:wght@700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            list-style: none;
+            font-family: "Montserrat", sans-serif;
+        }
+
+        body {
+            background-color: #0f0f1e;
+            color: #fff;
+            font-size: 16px;
+            overflow-x: hidden; /* Permite rolagem vertical, mas previne a horizontal */
+        }
+
+        /* Ajuste para o carrossel funcionar dentro do novo layout */
+        .carousel-section {
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .list {
+            width: 80%;
+            height: 100%;
+            max-width: 1400px; /* Limita a largura em telas muito grandes */
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .item {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: translateX(100vh);
+            transition: transform 0.7s ease-in-out, opacity 0.7s ease-in-out;
+        }
+
+        .item.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .book-cover {
+            width: 45%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .book-cover img {
+            max-width: 80%;
+            max-height: 60%;
+            object-fit: contain;
+            filter: drop-shadow(0 0 30px rgba(0, 247, 255, 0.3));
+            transform: translateX(200px);
+            opacity: 0;
+            transition: transform 0.6s ease, opacity 0.6s ease;
+            transition-delay: 0.5s;
+        }
+
+        .item.active .book-cover img {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .content {
+            width: 55%;
+            padding-right: 80px;
+            position: relative; /* Adicionado para contexto de z-index */
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        .content .category {
+            font-size: 1rem;
+            text-transform: uppercase;
+            color: #00f7ff;
+            font-weight: 600;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .content .title {
+            font-size: clamp(2.2rem, 5vw, 4.5rem); /* Tipografia fluida */
+            font-family: "Playfair Display", serif;
+            font-weight: 600;
+            line-height: 1.1;
+            margin-bottom: 1rem;
+        }
+
+        .content .description {
+            font-size: 1.1rem;
+            color: #b8b8d0;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            max-width: 600px;
+        }
+
+        .btn {
+            padding: 12px 16px;
+            background: linear-gradient(90deg, #00f7ff, #0066ff);
+            border: none;
+            border-radius: 30px;
+            color: #000;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: "Montserrat", sans-serif; /* Garante consistência da fonte */
+            text-decoration: none; /* Adicionado para links */
+            transition: background-position 0.5s ease, color 0.3s ease;
+        }
+
+        .arrows {
+            position: absolute;
+            width: 90%;
+            display: flex;
+            justify-content: space-between;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+        }
+
+        .arrow-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(247, 247, 255, 0.3);
+        }
+
+        .arrow-btn svg {
+            margin-top: 3px;
+            color: #fff;
+        }
+
+        .indicators {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translate(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            z-index: 5;
+        }
+
+        .dots {
+            display: flex;
+            gap: 10px;
+        }
+
+        .dot {
+            width: 40px;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }
+
+        /* --- Estilos da Grade da Biblioteca --- */
+        .library-grid {
+            padding: 4rem 50px;
+            background-color: #0c0c1a; /* Um tom ligeiramente diferente para separar as seções */
+            position: relative; /* Adicionado para contexto de z-index se necessário */
+        }
+
+        .library-title {
+            font-family: "Playfair Display", serif;
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: #00f7ff;
+        }
+
+        .book-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 2.5rem;
+        }
+
+        .grid-book-card {
+            background-color: #1f1f3a;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .grid-book-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0, 247, 255, 0.1);
+        }
+
+        .grid-book-cover {
+            display: block; /* Faz a tag 'a' se comportar como um bloco */
+            position: relative;
+            padding-bottom: 150%; /* Proporção 2:3 */
+            height: 0;
+            overflow: hidden;
+        }
+
+        .grid-book-cover img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .grid-book-card:hover .grid-book-cover img {
+            transform: scale(1.05);
+        }
+
+        .grid-book-info {
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1; /* Faz esta área crescer para preencher o espaço */
+        }
+
+        .grid-book-description {
+            font-size: 0.9rem;
+            color: #b8b8d0;
+            line-height: 1.5;
+            flex-grow: 1; /* Empurra o botão para baixo */
+            margin-bottom: 1rem;
+        }
+
+        .grid-read-btn {
+            padding: 10px 15px;
+            background: transparent;
+            border: 1px solid #00f7ff;
+            border-radius: 20px;
+            color: #00f7ff;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: "Montserrat", sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .grid-read-btn:hover {
+            background-color: #00f7ff;
+            color: #0f0f1e;
+        }
+
+        .grid-book-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Adiciona espaçamento entre os botões */
+            margin-top: auto; /* Empurra o grupo de botões para baixo */
+        }
+
+        .grid-buy-btn {
+            padding: 10px 15px;
+            background: transparent;
+            border: 1px solid #00f7ff;
+            border-radius: 20px;
+            color: #00f7ff;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: "Montserrat", sans-serif;
+            text-align: center;
+            text-decoration: none;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .grid-buy-btn:hover {
+            background-color: #00f7ff;
+            color: #0f0f1e;
+        }
+
+        /* --- Estilos da Seção de Aviso --- */
+        .disclaimer-section {
+            padding: 3rem 50px;
+            background-color: #1f1f3a;
+            border-top: 1px solid #00f7ff;
+            border-bottom: 1px solid #00f7ff;
+            text-align: center;
+        }
+
+        .disclaimer-content h3 {
+            font-family: "Playfair Display", serif;
+            font-size: 2rem;
+            color: #00f7ff;
+            margin-bottom: 1rem;
+        }
+
+        .disclaimer-content p {
+            font-size: 1.1rem;
+            color: #b8b8d0;
+            line-height: 1.7;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* --- Sidebar e Layout Novo --- */
+        .sidebar-livros {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: #1f1f3a; /* Adaptado para o tema do site */
+            color: white;
+            padding: 20px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+            overflow-y: auto;
+            z-index: 100;
+            border-right: 1px solid #00f7ff;
+        }
+
+        .sidebar-livros .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .sidebar-livros .logo svg {
+            width: 28px;
+            height: 28px;
+            color: #00f7ff;
+            filter: drop-shadow(0 0 5px rgba(0, 247, 255, 0.8));
+        }
+
+        .sidebar-livros .logo h2 {
+            font-family: "Playfair Display", serif;
+            color: #00f7ff;
+            font-size: 1.4rem;
+            letter-spacing: 1px;
+        }
+
+        .busca-container {
+            position: relative;
+            margin: 20px 0;
+            height: 45px; /* Altura fixa para manter o layout estável */
+            display: flex;
+            justify-content: flex-end; /* Alinha tudo à direita */
+        }
+
+        #busca-livro {
+            width: 0; /* Oculto inicialmente */
+            height: 100%;
+            padding: 0;
+            border: none;
+            background-color: transparent;
+            color: transparent;
+            font-size: 16px;
+            position: absolute;
+            right: 0;
+            transition: all 0.4s ease;
+            border-radius: 25px;
+            cursor: pointer;
+            z-index: 1;
+        }
+
+        /* Estado expandido (ativado via JS) */
+        .busca-container.ativo #busca-livro {
+            width: 100%;
+            padding: 12px 45px 12px 15px; /* Espaço para texto e botão */
+            border: 1px solid #00f7ff;
+            background-color: #0c0c1a;
+            color: #fff;
+            cursor: text;
+            border-radius: 8px;
+        }
+
+        #btn-buscar {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 45px;
+            height: 100%;
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #00f7ff;
+            z-index: 2; /* Fica acima do input */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #btn-buscar svg {
+            width: 20px;
+            height: 20px;
+            filter: drop-shadow(0 0 3px rgba(0, 247, 255, 0.8));
+            transition: all 0.3s ease;
+        }
+
+        #btn-buscar:hover svg {
+            filter: drop-shadow(0 0 8px rgba(0, 247, 255, 1));
+            transform: scale(1.1);
+        }
+
+        /* Estilos para as sugestões de pesquisa (Ocultas por padrão) */
+        #sugestoes-livros {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 100%;
+            background-color: #1f1f3a;
+            border: 1px solid #00f7ff;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none; /* Garante que não apareça sem interação */
+            z-index: 10;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        #sugestoes-livros.ativo {
+            display: block; /* Só aparece quando a classe 'ativo' é adicionada via JS */
+        }
+
+        .sugestao-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(0, 247, 255, 0.1);
+            color: #b8b8d0;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .sugestao-item:hover {
+            background-color: rgba(0, 247, 255, 0.1);
+            color: #00f7ff;
+        }
+
+        .nav-livros ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .nav-livros li a {
+            display: block;
+            color: #b8b8d0;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: background 0.3s, color 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .nav-livros li a:hover {
+            background: rgba(0, 247, 255, 0.1);
+            color: #00f7ff;
+        }
+
+        .conteudo-principal {
+            margin-left: 280px; /* compensa a sidebar */
+            width: calc(100% - 280px);
+        }
+
+        /* Classe para destaque na busca */
+        .destaque-busca {
+            box-shadow: 0 0 20px #00f7ff !important;
+            transform: scale(1.02);
+            transition: all 0.5s ease;
+            border: 1px solid #00f7ff;
+        }
+
+        /* --- Media Queries para Responsividade Drástica --- */
+
+        /* Para telas de desktop maiores (ex: > 1440px) */
+        @media (min-width: 1441px) {
+            .library-grid, .disclaimer-section {
+                padding-left: 80px;
+                padding-right: 80px;
+            }
+        }
+
+        /* Para telas de notebook e desktops menores (ex: < 1200px) */
+        @media (max-width: 1200px) {
+            .content .title {
+                font-size: clamp(2.5rem, 4.5vw, 3.8rem);
+            }
+            .content {
+                padding-right: 40px;
+            }
+        }
+
+        /* Para telas de tablet e mobile (ex: < 768px) */
+        @media (max-width: 768px) {
+            .sidebar-livros {
+                position: relative;
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid #00f7ff;
+                padding: 15px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .sidebar-livros .logo {
+                margin-bottom: 15px;
+            }
+
+            .logo h2 {
+                font-size: 1.3rem;
+            }
+
+            .busca-container {
+                width: 100%;
+                max-width: 400px;
+                margin: 10px 0;
+            }
+
+            /* Menu horizontal com scroll para economizar espaço vertical */
+            .nav-livros {
+                width: 100%;
+                overflow-x: auto;
+                white-space: nowrap;
+                padding: 5px 0;
+                -webkit-overflow-scrolling: touch; /* Rolagem suave no iOS */
+            }
+
+            .nav-livros ul {
+                display: flex;
+                gap: 10px;
+                padding: 0 5px;
+                justify-content: flex-start; /* Permite rolagem se necessário */
+            }
+
+            .nav-livros li a {
+                background: rgba(255, 255, 255, 0.05);
+                padding: 8px 16px;
+                border-radius: 20px;
+                font-size: 0.85rem;
+                border: 1px solid rgba(0, 247, 255, 0.2);
+            }
+
+            .conteudo-principal {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .carousel-section {
+                height: calc(100vh - 220px); /* Ajusta altura considerando o header mobile */
+                min-height: 500px; /* Altura mínima segura */
+            }
+
+            .item {
+                flex-direction: column;
+                justify-content: flex-start; /* Alinha ao topo para evitar cortes */
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+            }
+
+            .book-cover {
+                width: 100%;
+                height: 30%; /* Reduzido para dar espaço ao conteúdo */
+                margin-bottom: 1rem;
+            }
+            .book-cover img {
+                max-height: 100%;
+                max-width: 50%;
+            }
+
+            .content {
+                width: 100%;
+                height: auto; /* Permite que o conteúdo cresça conforme necessário */
+                padding: 0 20px;
+                text-align: center;
+                align-items: center;
+                justify-content: flex-start;
+            }
+
+            .content .title {
+                font-size: clamp(1.8rem, 4vw, 2.5rem);
+                margin-bottom: 0.5rem;
+            }
+            
+            .content .description {
+                font-size: 1.05rem;
+                line-height: 1.4;
+                margin-bottom: 1.5rem;
+                /* Limita o texto para não estourar a tela em dispositivos pequenos */
+                display: -webkit-box;
+                -webkit-line-clamp: 5;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+
+            .btn {
+                padding: 12px 30px;
+                font-size: 1rem;
+                box-shadow: 0 5px 15px rgba(0, 247, 255, 0.15); /* Sombra suave para destaque */
+            }
+
+            .grid-book-buttons {
+                gap: 15px; /* Garante espaçamento perfeito entre os botões da grade */
+            }
+
+            .arrows {
+                top: 20%; /* Ajusta a posição das setas para alinhar com a capa */
+                width: 100%;
+                padding: 0 10px;
+            }
+
+            .library-grid, .disclaimer-section {
+                padding: 3rem 20px;
+            }
+        }
+
+        /* Ajustes para telas muito pequenas (ex: iPhone SE, Galaxy Fold fechado) */
+        @media (max-width: 380px) {
+            .carousel-section {
+                min-height: 450px;
+            }
+            .content .title {
+                font-size: 1.5rem;
+            }
+            .book-cover {
+                height: 25%;
+            }
+            .content .description {
+                font-size: 0.9rem;
+                -webkit-line-clamp: 4;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar vertical -->
+    <aside class="sidebar-livros">
+        <div class="logo">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+            <h2>Biblioteca</h2>
+        </div>
+
+        <!-- Campo de busca -->
+        <div class="busca-container">
+            <input type="text" id="busca-livro" placeholder="Pesquisar livro..." aria-label="Campo de busca de livros" />
+            <button id="btn-buscar" aria-label="Buscar">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </button>
+            <div class="sugestoes" id="sugestoes-livros"></div>
+        </div>
+
+        <!-- Lista de livros para navegação rápida -->
+        <nav class="nav-livros">
+            <ul>
+                <li><a href="#mal-estar">📖 O Mal Estar na Civilização</a></li>
+                <li><a href="#psicologia-massas">📖 Psicologia das Massas</a></li>
+                <li><a href="#homem-simbolos">📖 O Homem e Seus Símbolos</a></li>
+                <li><a href="#interpretacao-sonhos">📖 A Interpretação dos Sonhos</a></li>
+                <li><a href="#narcisismo">📖 Introdução ao Narcisismo</a></li>
+                <li><a href="#natureza-psique">📖 A Natureza da Psique</a></li>
+                <li><a href="#inibicao">📖 Inibição, Sintoma e Angústia</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="conteudo-principal">
+        <!-- Carrossel (antiga main) -->
+        <div class="carousel-section">
+        <div class="list">
+            <div class="item active">
+                <div class="book-cover">
+                    <img src="https://i.ibb.co/Z6bmZL5f/1704060.webp" alt="Capa do livro O Mal Estar na Civilização">
+                </div>
+                <div class="content">
+                    <p class="category">Psicanálise</p>
+                    <p class="title">O Mal Estar na Civilização</p>
+                    <p class="description">Nesta obra, Freud explora o conflito fundamental entre a busca individual pela felicidade e as restrições impostas pela vida em sociedade.</p>
+                    <!-- Adicionado data-pdf-url e o onclick para abrir o leitor -->
+                    <button class="btn" 
+                            data-pdf-url="livros/o-mal-estar-na-civilizacao.pdf" 
+                            onclick="abrirLeitor(this.dataset.pdfUrl)">Ler Agora</button>
+                </div>
+            </div>
+
+            <div class="item">
+                <div class="book-cover">
+                    <img src="https://i.ibb.co/jkkcJB6y/514-E8-Bp-D16-L.webp" alt="Capa do livro Psicologia das Massas">
+                </div>
+                <div class="content">
+                    <p class="category">Psicanálise</p>
+                    <p class="title">Psicologia das Massas</p>
+                    <p class="description">Freud analisa como os indivíduos se comportam de forma diferente quando inseridos em um grupo, investigando os laços que unem as massas.</p>
+                    <!-- Adicionado data-pdf-url e o onclick para abrir o leitor -->
+                    <button class="btn" 
+                            data-pdf-url="livros/psicologia-das-massas.pdf" 
+                            onclick="abrirLeitor(this.dataset.pdfUrl)">Ler Agora</button>
+                </div>
+            </div>
+
+            <div class="item">
+                <div class="book-cover">
+                    <img src="https://i.ibb.co/QFrJQv7v/91-HKfb-XRVHL.jpg" alt="Capa do livro O Homem e Seus Símbolos">
+                </div>
+                <div class="content">
+                    <p class="category">Psicologia Analítica</p>
+                    <p class="title">O Homem e Seus Símbolos</p>
+                    <p class="description">Última obra de Carl Jung, este livro é uma introdução acessível aos seus conceitos sobre o inconsciente, os sonhos e os arquétipos.</p>
+                    <!-- Adicionado data-pdf-url e o onclick para abrir o leitor -->
+                    <button class="btn" 
+                            data-pdf-url="livros/o-homem-e-seus-simbolos.pdf" 
+                            onclick="abrirLeitor(this.dataset.pdfUrl)">Ler Agora</button>
+                </div>
+            </div>
+
+            <!-- SEU NOVO LIVRO VAI AQUI -->
+            <div class="item">
+                <div class="book-cover">
+                    <img src="https://i.ibb.co/Sw0V06Ph/Livro-Freud-V-4-A-Interpretacao-Dos-Sonhos-1900.jpg" alt="Capa do livro A Interpretação dos Sonhos">
+                </div>
+                <div class="content">
+                    <p class="category">Psicanálise</p>
+                    <p class="title">A Interpretação dos Sonhos</p>
+                    <p class="description">Obra fundamental que inaugurou a psicanálise, Freud apresenta o sonho como a "via régia para o conhecimento do inconsciente", desvendando seus mecanismos e significados ocultos.</p>
+                    <!-- Adicionado data-pdf-url e o onclick para abrir o leitor -->
+                    <button class="btn" 
+                            data-pdf-url="livros/a-interpretacao-dos-sonhos.pdf" 
+                            onclick="abrirLeitor(this.dataset.pdfUrl)">Ler Agora</button>
+                </div>
+            </div>
+
+            
+            <div class="item">
+                <div class="book-cover">
+                    <img src="https://i.ibb.co/fGVG4fHb/D-Q-NP-2-X-652377-MLU72972405949-112023-E.webp" alt="Capa do livro O Mito de Sísifo">
+                </div>
+                <div class="content">
+                    <p class="category">Psicologia</p>
+                    <p class="title">Inibição, sintoma e angústia, o futuro de uma ilusão e outros textos</p>
+                    <p class="description">Uma obra de freud</p>
+                    <!-- Adicionado data-pdf-url e o onclick para abrir o leitor -->
+                    <button class="btn" 
+                            data-pdf-url="livros/inibicao-sintoma-angustia.pdf" 
+                            onclick="abrirLeitor(this.dataset.pdfUrl)">Ler Agora</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="arrows">
+            <button class="arrow-btn" id="prev">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+                    class="bi bi-arrow-left" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd"
+                        d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8" />
+                </svg>
+            </button>
+
+            <button class="arrow-btn" id="next">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+                    class="bi bi-arrow-right" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd"
+                        d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="indicators">
+            <div class="dots">
+                <div class="dot active"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </div>
+        </div>
+
+    <script>
+        // Função para abrir o leitor de PDF
+        function abrirLeitor(urlDoPdf) {
+            if (urlDoPdf) {
+                window.location.href = `leitor.html?url=${encodeURIComponent(urlDoPdf)}`;
+            }
+        }
+    </script>
+    <script src="script.js"></script>
+
+    <section class="disclaimer-section">
+        <div class="disclaimer-content">
+            <h3>Aviso Importante</h3>
+            <p>Este site é um modelo de portfólio e funciona como uma <strong>simulação</strong> de uma biblioteca digital. Para respeitar os direitos autorais e não distribuir conteúdo que não seja de domínio público, os links para leitura e compra não são funcionais. O objetivo é unicamente demonstrar o design e as funcionalidades que podem ser implementadas em um projeto real.</p>
+        </div>
+    </section>
+
+    <section class="library-grid">
+        <h2 class="library-title">Explore Nossa Biblioteca</h2>
+        <div class="book-grid">
+            <!-- Fileira 1 -->
+            <div class="grid-book-card" id="mal-estar">
+                <a href="#" class="grid-book-cover" onclick="return false;">
+                    <img src="https://i.ibb.co/Z6bmZL5f/1704060.webp" alt="Capa do livro O Mal Estar na Civilização">
+                </a>
+                <div class="grid-book-info">
+                    <p class="grid-book-description">O Mal Estar na Civilização (1930-1936)</p>
+                    <div class="grid-book-buttons">
+                        <button class="grid-read-btn" 
+                                data-pdf-url="livros/o-mal-estar-na-civilizacao.pdf" 
+                                onclick="abrirLeitor(this.dataset.pdfUrl)">Ler Agora</button>
+                        <a href="#" onclick="return false;" target="_blank" class="grid-buy-btn">Comprar Físico</a>
+                    </div>
+                </div>
+            </div>
+            <div class="grid-book-card" id="psicologia-massas">
+                <a href="#" class="grid-book-cover" onclick="return false;">
+                    <img src="https://i.ibb.co/jkkcJB6y/514-E8-Bp-D16-L.webp" alt="Capa do livro Psicologia das Massas">
+                </a>
+                <div class="grid-book-info">
+                    <p class="grid-book-description">Psicologia das Massas e Análise do Eu.</p>
+                    <div class="grid-book-buttons">
+                        <button class="grid-read-btn" 
+                                data-pdf-url="livros/psicologia-das-massas.pdf" 
+                                onclick="abrirLeitor(this.dataset.pdfUrl)">Ler Agora</button>
+                        <a href="#" onclick="return false;" target="_blank" class="grid-buy-btn">Comprar Físico</a>
+                    </div>
+                </div>
+            </div>
+            <div class="grid-book-card" id="homem-simbolos">
+                <a href="#" class="grid-book-cover" onclick="return false;">
+                    <img src="https://i.ibb.co/QFrJQv7v/91-HKfb-XRVHL.jpg" alt="Capa do livro O Homem e Seus Símbolos">
+                </a>
+                <div class="grid-book-info">
+                    <p class="grid-book-description">O Homem e Seus Símbolos, de Carl Jung.</p>
+                    <div class="grid-book-buttons">
+                        <button class="grid-read-btn" 
+                                data-pdf-url="livros/o-homem-e-seus-simbolos.pdf" 
+                                onclick="abrirLeitor(this.dataset.pdfUrl)">Ler Agora</button>
+                        <a href="#" onclick="return false;" target="_blank" class="grid-buy-btn">Comprar Físico</a>
+                    </div>
+                </div>
+            </div>
+            <div class="grid-book-card" id="interpretacao-sonhos">
+                <a href="#" class="grid-book-cover" onclick="return false;">
+                    <img src="https://i.ibb.co/Sw0V06Ph/Livro-Freud-V-4-A-Interpretacao-Dos-Sonhos-1900.jpg" alt="Capa do livro A Interpretação dos Sonhos">
+                </a>
+                <div class="grid-book-info">
+                    <p class="grid-book-description">A Interpretação dos Sonhos (1900).</p>
+                    <div class="grid-book-buttons">
+                        <button class="grid-read-btn" 
+                                data-pdf-url="livros/a-interpretacao-dos-sonhos.pdf" 
+                                onclick="abrirLeitor(this.dataset.pdfUrl)">Ler Agora</button>
+                        <a href="#" onclick="return false;" target="_blank" class="grid-buy-btn">Comprar Físico</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Fileira 2 -->
+            <div class="grid-book-card" id="narcisismo">
+                <a href="#" class="grid-book-cover" onclick="return false;">
+                    <img src="https://i.ibb.co/Z6sB3yzB/71z-Mi0-YCBq-L-SY522.jpg" alt="Capa do livro Introdução ao Narcisismo de Sigmund Freud">
+                </a>
+                <div class="grid-book-info">
+                    <p class="grid-book-description">Introdução ao Narcisismo (1914-1916)</p>
+                    <div class="grid-book-buttons">
+                        <button class="grid-read-btn" 
+                                data-pdf-url="livros/introducao-ao-narcisismo.pdf" 
+                                onclick="abrirLeitor(this.dataset.pdfUrl)">Ler Agora</button>
+                        <a href="#" onclick="return false;" target="_blank" class="grid-buy-btn">Comprar Físico</a>
+                    </div>
+                </div>
+            </div>
+            <div class="grid-book-card" id="natureza-psique">
+                <a href="#" class="grid-book-cover" onclick="return false;">
+                    <img src="https://i.ibb.co/TxH9XJ4X/13490604.webp" alt="Capa do livro A Natureza da Psique de Carl Jung">
+                </a>
+                <div class="grid-book-info">
+                    <p class="grid-book-description">A Natureza da Psique, de Carl Jung.</p>
+                    <div class="grid-book-buttons">
+                        <button class="grid-read-btn" 
+                                data-pdf-url="livros/a-natureza-da-psique.pdf" 
+                                onclick="abrirLeitor(this.dataset.pdfUrl)">Ler Agora</button>
+                        <a href="#" onclick="return false;" target="_blank" class="grid-buy-btn">Comprar Físico</a>
+                    </div>
+                </div>
+            </div>
+            <div class="grid-book-card" id="inibicao">
+                <a href="#" class="grid-book-cover" onclick="return false;">
+                    <img src="https://i.ibb.co/fGVG4fHb/D-Q-NP-2-X-652377-MLU72972405949-112023-E.webp" alt="Capa do livro Inibição, sintoma e angústia">
+                </a>
+                <div class="grid-book-info">
+                    <p class="grid-book-description">Inibição, sintoma e angústia e outros textos.</p>
+                    <div class="grid-book-buttons">
+                        <button class="grid-read-btn" 
+                                data-pdf-url="livros/inibicao-sintoma-angustia.pdf" 
+                                onclick="abrirLeitor(this.dataset.pdfUrl)">Ler Agora</button>
+                        <a href="#" onclick="return false;" target="_blank" class="grid-buy-btn">Comprar Físico</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    </main>
+</body>
+
+</html>

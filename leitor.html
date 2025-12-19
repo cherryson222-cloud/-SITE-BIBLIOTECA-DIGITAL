@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leitor de PDF</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #0f0f1e;
+            font-family: "Montserrat", sans-serif;
+        }
+
+        .reader-header {
+            padding: 15px 50px;
+            background-color: #1f1f3a;
+            border-bottom: 1px solid #00f7ff;
+            display: flex;
+            align-items: center;
+        }
+
+        .back-button {
+            color: #00f7ff;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .pdf-container {
+            flex-grow: 1;
+            /* Ocupa todo o espaço restante */
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Responsividade para mobile */
+        @media (max-width: 768px) {
+            .reader-header {
+                padding: 15px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="reader-header">
+        <a href="index.html" class="back-button">&larr; Voltar para a Biblioteca</a>
+    </header>
+
+    <main class="pdf-container">
+        <iframe id="pdf-viewer" src="" title="Leitor de PDF"></iframe>
+    </main>
+
+    <script>
+        window.onload = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pdfUrl = urlParams.get('url');
+            if (pdfUrl) {
+                document.getElementById('pdf-viewer').setAttribute('src', pdfUrl);
+            }
+        };
+    </script>
+</body>
+
+</html>
